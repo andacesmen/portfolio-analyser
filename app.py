@@ -876,10 +876,10 @@ with tab4:
                 ["Name", "Sektor", "Industrie", "KGV (PE)", "Div. Rendite (%)", "Aktueller_Wert_EUR"]].copy()
 
             styled_fund_df = display_fund_df.style.format({
-                "KGV (PE)": "{:.2f}",
-                "Div. Rendite (%)": "{:.2f} %",
+                "KGV (PE)": lambda x: f"{x:.2f}" if (pd.notnull(x) and isinstance(x, (int, float))) else "N/A",
+                "Div. Rendite (%)": lambda x: f"{x:.2f} %" if pd.notnull(x) else "0.00 %",
                 "Aktueller_Wert_EUR": "{:,.2f} €"
-            }).background_gradient(subset=["Div. Rendite (%)"], cmap="Greens")
+            }, na_rep="N/A").background_gradient(subset=["Div. Rendite (%)"], cmap="Greens")
 
             st.dataframe(styled_fund_df, use_container_width=True, hide_index=True)
 
