@@ -648,9 +648,8 @@ with tab2:
                         st.markdown(f"### Gruppe {i}")
                         st.write("(Leer)")
 
-# ------------------------------------------
+
 # TAB 3: RISIKO-SIMULATION
-# ------------------------------------------
 with tab3:
     st.header("Monte-Carlo-Simulation & Value at Risk (VaR)")
     st.markdown("Simulation von 1.000 möglichen Zukünften basierend auf historischer Volatilität (Währungsbereinigt).")
@@ -785,55 +784,50 @@ with tab3:
             st.error(f"Fehler bei der Berechnung in Tab 3. Details: {e}")
 
 
-# TAB 4: SEKTOREN & FUNDAMENTALDATEN
-with tab4:
-    st.header("Sektor-Allokation & Fundamentaldaten")
-    st.markdown("Analyse der Branchenverteilung und fundamentalen Bewertungskennzahlen deines Portfolios.")
-
-    if total_current <= 0:
-        st.info("Bitte füge Positionen hinzu, um die Fundamentaldaten zu sehen.")
-    else:
-        with st.spinner("Lade Fundamentaldaten von Yahoo Finance... ⏳"):
-
-            @st.cache_data(ttl=3600)
+@st.cache_data(ttl=3600)
             def fetch_fundamentals(ticker_list):
-                def get_info(t):
+                fund_data = []
+                
+                for t in ticker_list:
                     try:
-                        ticker_obj = yf.Ticker(t)
-                        info = ticker_obj.info
+                        # Wir erstellen das Ticker-Objekt direkt
+                        dat = yf.Ticker(t)
+                        # .info ist oft langsam oder blockiert, .get_info() ist manchmal stabiler
+                        info = dat.info
+                        
+                        if not info or len(info) < 5:
+                            raise ValueError("Zu wenig Daten")
 
-                        # Berechnung der Dividende
-                        div_rate = info.get("dividendRate")
+                        # Dividenden-Logik
+                        div_pct = 0.0
                         price = info.get("currentPrice") or info.get("regularMarketPrice") or info.get("previousClose")
-
-                        if div_rate and price and price > 0:
+                        div_rate = info.get("dividendRate")
+                        
+                        if div_rate and price:
                             div_pct = (div_rate / price) * 100
                         else:
-                            raw_div = info.get("dividendYield") or 0.0
-                            div_pct = raw_div if raw_div > 0.5 else raw_div * 100
+                            div_pct = (info.get("dividendYield", 0) or 0) * 100
 
-                        return {
+                        fund_data.append({
                             "Ticker": t,
-                            "Sektor": info.get("sector", "Krypto / ETF / Sonstige"),
-                            "Industrie": info.get("industry", "Krypto / ETF / Sonstige"),
-                            "KGV (PE)": info.get("trailingPE", None),
+                            "Sektor": info.get("sector", "Krypto/ETF"),
+                            "Industrie": info.get("industry", "Krypto/ETF"),
+                            "KGV (PE)": info.get("trailingPE"),
                             "Div. Rendite (%)": div_pct
-                        }
+                        })
                     except Exception:
-                        return {
+                        # Fallback für ETFs/Krypto oder API-Sperren
+                        fund_data.append({
                             "Ticker": t,
-                            "Sektor": "Unbekannt",
-                            "Industrie": "Unbekannt",
+                            "Sektor": "ETF/Krypto" if ("-" in t or t.endswith("=F")) else "Diverses",
+                            "Industrie": "Finanzen/Krypto",
                             "KGV (PE)": None,
                             "Div. Rendite (%)": 0.0
-                        }
-
-                fund_data = []
-                with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
-                    results = list(executor.map(get_info, ticker_list))
-                    fund_data = results
-
+                        })
                 return pd.DataFrame(fund_data)
+
+            # --- Daten abrufen ---
+            fund_df = fetch_fundamentals(tickers)
 
             # --- WICHTIG: Daten-Harmonisierung vor dem Merge ---
             fund_df = fetch_fundamentals(tickers)
