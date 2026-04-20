@@ -582,12 +582,10 @@ with tab2:
             with col_dendro:
                 dist_matrix = 1 - corr_matrix
                 dist_matrix = (dist_matrix + dist_matrix.T) / 2.0
-                dist_matrix = np.clip(dist_matrix, 0, 2)
-                np.fill_diagonal(dist_matrix.values, 0)
-                if dist_matrix.isna().any().any():
-                    dist_matrix = dist_matrix.fillna(0)
-
-                condensed_dist = ssd.squareform(dist_matrix)
+                dist_matrix = np.clip(dist_matrix, 0, 2).fillna(0)
+                dist_values = dist_matrix.to_numpy(copy=True)
+                np.fill_diagonal(dist_values, 0)
+                condensed_dist = ssd.squareform(dist_values)
                 Z = sch.linkage(condensed_dist, method='ward')
 
                 fig_dendro, ax = plt.subplots(figsize=(10, 5))
