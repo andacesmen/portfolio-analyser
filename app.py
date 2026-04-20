@@ -784,7 +784,7 @@ with tab3:
             st.error(f"Fehler bei der Berechnung in Tab 3. Details: {e}")
 
 
-@st.cache_data(ttl=3600)
+            @st.cache_data(ttl=3600)
             def fetch_fundamentals(ticker_list):
                 fund_data = []
                 
