@@ -799,7 +799,8 @@ with tab4:
             def fetch_fundamentals(ticker_list):
                 def get_info(t):
                     try:
-                        info = yf.Ticker(t).info
+                        ticker_obj = yf.Ticker(t)
+                        info = ticker_obj.info
 
                         # Berechnung der Dividende
                         div_rate = info.get("dividendRate")
@@ -811,7 +812,6 @@ with tab4:
                             raw_div = info.get("dividendYield") or 0.0
                             div_pct = raw_div if raw_div > 0.5 else raw_div * 100
 
-                        # --- RÜCKGABE DES SAUBEREN DICTIONARIES ---
                         return {
                             "Ticker": t,
                             "Sektor": info.get("sector", "Krypto / ETF / Sonstige"),
@@ -829,16 +829,24 @@ with tab4:
                         }
 
                 fund_data = []
-                with concurrent.futures.ThreadPoolExecutor(max_workers=10) as executor:
-                    results = executor.map(get_info, ticker_list)
-                    for res in results:
-                        fund_data.append(res)
+                with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
+                    results = list(executor.map(get_info, ticker_list))
+                    fund_data = results
 
                 return pd.DataFrame(fund_data)
 
+            # --- WICHTIG: Daten-Harmonisierung vor dem Merge ---
             fund_df = fetch_fundamentals(tickers)
+            
+            # Ticker-Typen angleichen, um leere Merges zu verhindern
+            portfolio_data["Ticker"] = portfolio_data["Ticker"].astype(str).str.strip()
+            fund_df["Ticker"] = fund_df["Ticker"].astype(str).str.strip()
 
             merged_portfolio = pd.merge(portfolio_data, fund_df, on="Ticker", how="left")
+            
+            # Standardwerte für fehlende Daten setzen
+            merged_portfolio["Sektor"] = merged_portfolio["Sektor"].fillna("Unbekannt")
+            merged_portfolio["Div. Rendite (%)"] = merged_portfolio["Div. Rendite (%)"].fillna(0.0)
 
             st.divider()
 
@@ -861,7 +869,7 @@ with tab4:
             with col_kpi:
                 st.subheader("Portfolio-Charakteristik")
                 st.info(
-                    "**Treemap-Erklärung:**\nDie Größe der Kacheln spiegelt den monetären Wert der Position wider. Die Farbe zeigt die aktuelle Performance (Grün = Gewinn, Rot = Verlust). ETFs und Kryptowährungen haben in der Regel keinen klassischen Unternehmenssektor und werden separat gruppiert.")
+                    "**Treemap-Erklärung:**\nDie Größe der Kacheln spiegelt den monetären Wert der Position wider. Die Farbe zeigt die Performance.")
 
                 # Berechnung der durchschnittlichen Dividendenrendite (Gewichtet)
                 merged_portfolio['Gewicht'] = merged_portfolio['Aktueller_Wert_EUR'] / total_current
@@ -875,6 +883,7 @@ with tab4:
             display_fund_df = merged_portfolio[
                 ["Name", "Sektor", "Industrie", "KGV (PE)", "Div. Rendite (%)", "Aktueller_Wert_EUR"]].copy()
 
+            # Robuste Formatierung mit Lambda-Funktionen
             styled_fund_df = display_fund_df.style.format({
                 "KGV (PE)": lambda x: f"{x:.2f}" if (pd.notnull(x) and isinstance(x, (int, float))) else "N/A",
                 "Div. Rendite (%)": lambda x: f"{x:.2f} %" if pd.notnull(x) else "0.00 %",
