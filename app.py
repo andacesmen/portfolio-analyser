@@ -605,10 +605,29 @@ with tab2:
             st.divider()
             st.subheader("Portfolio-Diagnose & Handlungsempfehlungen")
             st.markdown(
-                "Das Machine-Learning-Modell hat den Baum oben mathematisch zerschnitten und **Risiko-Gruppen (Klumpenrisiken)** identifiziert. Hier ist die detaillierte Diagnose deines Portfolios:")
+                "Das Machine-Learning-Modell hat den Baum oben mathematisch analysiert und die **optimale Anzahl an Risiko-Gruppen** identifiziert.")
 
-            max_clusters = min(4, len(corr_matrix.columns))
-            cluster_labels = sch.fcluster(Z, t=max_clusters, criterion='maxclust')
+            # --- DYNAMISCHE CLUSTER-BERECHNUNG ---
+            from sklearn.metrics import silhouette_score
+
+            # Wir testen, welche Cluster-Anzahl (2, 3 oder 4) am besten zu den Daten passt
+            best_k = 2
+            if len(corr_matrix.columns) > 2:
+                sil_scores = []
+                k_range = range(2, min(5, len(corr_matrix.columns)))
+                
+                for k in k_range:
+                    labels = sch.fcluster(Z, t=k, criterion='maxclust')
+                    score = silhouette_score(dist_values, labels, metric='precomputed')
+                    sil_scores.append((k, score))
+                
+                # Wähle das k mit dem höchsten Silhouette Score
+                best_k = max(sil_scores, key=lambda x: x[1])[0]
+            else:
+                best_k = len(corr_matrix.columns)
+
+            # Cluster mit dem dynamisch ermittelten best_k erstellen
+            cluster_labels = sch.fcluster(Z, t=best_k, criterion='maxclust')
 
             name_dict = dict(zip(portfolio_data["Ticker"], portfolio_data["Name"]))
             value_dict = dict(zip(portfolio_data["Ticker"], portfolio_data["Aktueller_Wert_EUR"]))
@@ -620,9 +639,11 @@ with tab2:
             })
 
             cluster_df["Wert_EUR"] = cluster_df["Ticker"].map(value_dict).fillna(0)
-            cluster_cols = st.columns(max_clusters)
+            
+            # Erstelle nur so viele Spalten, wie wir Cluster haben
+            cluster_cols = st.columns(best_k)
 
-            for i in range(1, max_clusters + 1):
+            for i in range(1, best_k + 1):
                 assets_in_cluster = cluster_df[cluster_df["Cluster_ID"] == i]
                 with cluster_cols[i - 1]:
                     if not assets_in_cluster.empty:
@@ -630,23 +651,17 @@ with tab2:
                         cluster_pct = (cluster_val / total_current) * 100 if total_current > 0 else 0
 
                         st.markdown(f"### Gruppe {i}")
-                        st.metric("Gewichtung im Depot", f"{cluster_pct:.1f} %", f"{cluster_val:,.0f} €",
+                        st.metric("Gewichtung", f"{cluster_pct:.1f} %", f"{cluster_val:,.0f} €",
                                   delta_color="off")
                         asset_names = assets_in_cluster["Name"].tolist()
                         st.write(f"**Enthält:** {', '.join(asset_names)}")
 
                         if cluster_pct >= 50:
-                            st.error(
-                                "**⚠️ Kritisches Klumpenrisiko**\n\nDein Portfolio ist extrem abhängig von dieser Verhaltensgruppe. Wenn diese Assets durch einen Branchen-Schock fallen, reißt es einen Großteil deines Depots mit.\n\n**Empfehlung:** Erwäge ein *Rebalancing* (Verkauf von Anteilen) oder lenke künftige Sparraten gezielt in andere Gruppen.")
+                            st.error("**⚠️ Kritisches Klumpenrisiko**")
                         elif cluster_pct >= 25:
-                            st.warning(
-                                "**🟡 Erhöhte Gewichtung**\n\nDies ist eine starke Säule deines Depots, die sich sehr ähnlich verhält.\n\n**Empfehlung:** Beobachte diese Gruppe. Weitere Zukäufe sollten eher in kleinere, unkorrelierte Gruppen fließen, um die Balance zu wahren.")
+                            st.warning("**🟡 Erhöhte Gewichtung**")
                         else:
-                            st.success(
-                                "**🟢 Gut diversifiziert**\n\nDiese Gruppe dient als gesunde Beimischung und Ausgleich zu deinen Hauptpositionen.\n\n**Empfehlung:** Hervorragend zur Stabilisierung. Bei Markt-Rücksetzern könntest du hier antizyklisch nachkaufen.")
-                    else:
-                        st.markdown(f"### Gruppe {i}")
-                        st.write("(Leer)")
+                            st.success("**🟢 Gut diversifiziert**")
 
 
 # TAB 3: RISIKO-SIMULATION
