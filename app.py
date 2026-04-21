@@ -783,6 +783,15 @@ with tab3:
         except Exception as e:
             st.error(f"Fehler bei der Berechnung in Tab 3. Details: {e}")
 
+# TAB 4: SEKTOREN & FUNDAMENTALDATEN
+with tab4:
+    st.header("Sektor-Allokation & Fundamentaldaten")
+    st.markdown("Analyse der Branchenverteilung und fundamentalen Bewertungskennzahlen deines Portfolios.")
+
+    if total_current <= 0:
+        st.info("Bitte füge Positionen hinzu, um die Fundamentaldaten zu sehen.")
+    else:
+        with st.spinner("Lade Fundamentaldaten von Yahoo Finance... ⏳"):
 
             @st.cache_data(ttl=3600)
             def fetch_fundamentals(ticker_list):
