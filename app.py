@@ -858,21 +858,15 @@ with tab4:
                             "Div. Rendite (%)": 0.0
                         }
 
-    fund_data = []
-    # ThreadPool für Geschwindigkeit beibehalten
-    with concurrent.futures.ThreadPoolExecutor(max_workers=10) as executor:
-        results = list(executor.map(get_info, ticker_list))
-        fund_data = results
-
-    return pd.DataFrame(fund_data)
-
                 fund_data = []
+                # ThreadPool für Geschwindigkeit beibehalten
                 with concurrent.futures.ThreadPoolExecutor(max_workers=10) as executor:
-                    results = executor.map(get_info, ticker_list)
-                    for res in results:
-                        fund_data.append(res)
-
+                    results = list(executor.map(get_info, ticker_list))
+                    fund_data = results
+            
                 return pd.DataFrame(fund_data)
+
+    
 
             fund_df = fetch_fundamentals(tickers)
 
