@@ -843,40 +843,7 @@ with tab4:
                             "Ticker": t, "Sektor": "Unbekannt", "Industrie": "Unbekannt",
                             "KGV (PE)": None, "Div. Rendite (%)": 0.0
                         }
-   """         @st.cache_data(ttl=3600)
-            def fetch_fundamentals(ticker_list):
-                def get_info(t):
-                    try:
-                        info = yf.Ticker(t).info
-
-                       # Berechnung der Dividende
-                        div_rate = info.get("dividendRate")
-                        price = info.get("currentPrice") or info.get("regularMarketPrice") or info.get("previousClose")
-
-                        if div_rate and price and price > 0:
-                            div_pct = (div_rate / price) * 100
-                        else:
-                            raw_div = info.get("dividendYield") or 0.0
-                            div_pct = raw_div if raw_div > 0.5 else raw_div * 100
-
-                        # --- RÜCKGABE DES SAUBEREN DICTIONARIES ---
-                        return {
-                            "Ticker": t,
-                            "Sektor": info.get("sector", "Krypto / ETF / Sonstige"),
-                            "Industrie": info.get("industry", "Krypto / ETF / Sonstige"),
-                            "KGV (PE)": info.get("trailingPE", None),
-                            "Div. Rendite (%)": div_pct
-                        }
-                    except Exception:
-                        return {
-                            "Ticker": t,
-                            "Sektor": "Unbekannt",
-                            "Industrie": "Unbekannt",
-                            "KGV (PE)": None,
-                            "Div. Rendite (%)": 0.0
-                        }"""
-
-            
+                    
 
                 fund_data = []
                 with concurrent.futures.ThreadPoolExecutor(max_workers=10) as executor:
