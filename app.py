@@ -5,6 +5,7 @@ import numpy as np
 import plotly.express as px
 import scipy.cluster.hierarchy as sch
 import scipy.spatial.distance as ssd
+from sklearn.metrics import silhouette_score
 import matplotlib.pyplot as plt
 import requests
 import concurrent.futures
