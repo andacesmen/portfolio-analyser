@@ -795,61 +795,48 @@ with tab4:
 
             @st.cache_data(ttl=3600)
             def fetch_fundamentals(ticker_list):
-                fund_data = []
-                
-                for t in ticker_list:
+                def get_info(t):
                     try:
-                        # Wir erstellen das Ticker-Objekt direkt
-                        dat = yf.Ticker(t)
-                        # .info ist oft langsam oder blockiert, .get_info() ist manchmal stabiler
-                        info = dat.info
-                        
-                        if not info or len(info) < 5:
-                            raise ValueError("Zu wenig Daten")
+                        info = yf.Ticker(t).info
 
-                        # Dividenden-Logik
-                        div_pct = 0.0
-                        price = info.get("currentPrice") or info.get("regularMarketPrice") or info.get("previousClose")
+                        # Berechnung der Dividende
                         div_rate = info.get("dividendRate")
-                        
-                        if div_rate and price:
+                        price = info.get("currentPrice") or info.get("regularMarketPrice") or info.get("previousClose")
+
+                        if div_rate and price and price > 0:
                             div_pct = (div_rate / price) * 100
                         else:
-                            div_pct = (info.get("dividendYield", 0) or 0) * 100
+                            raw_div = info.get("dividendYield") or 0.0
+                            div_pct = raw_div if raw_div > 0.5 else raw_div * 100
 
-                        fund_data.append({
+                        # --- RÜCKGABE DES SAUBEREN DICTIONARIES ---
+                        return {
                             "Ticker": t,
-                            "Sektor": info.get("sector", "Krypto/ETF"),
-                            "Industrie": info.get("industry", "Krypto/ETF"),
-                            "KGV (PE)": info.get("trailingPE"),
+                            "Sektor": info.get("sector", "Krypto / ETF / Sonstige"),
+                            "Industrie": info.get("industry", "Krypto / ETF / Sonstige"),
+                            "KGV (PE)": info.get("trailingPE", None),
                             "Div. Rendite (%)": div_pct
-                        })
+                        }
                     except Exception:
-                        # Fallback für ETFs/Krypto oder API-Sperren
-                        fund_data.append({
+                        return {
                             "Ticker": t,
-                            "Sektor": "ETF/Krypto" if ("-" in t or t.endswith("=F")) else "Diverses",
-                            "Industrie": "Finanzen/Krypto",
+                            "Sektor": "Unbekannt",
+                            "Industrie": "Unbekannt",
                             "KGV (PE)": None,
                             "Div. Rendite (%)": 0.0
-                        })
+                        }
+
+                fund_data = []
+                with concurrent.futures.ThreadPoolExecutor(max_workers=10) as executor:
+                    results = executor.map(get_info, ticker_list)
+                    for res in results:
+                        fund_data.append(res)
+
                 return pd.DataFrame(fund_data)
 
-            # --- Daten abrufen ---
             fund_df = fetch_fundamentals(tickers)
-
-            # --- WICHTIG: Daten-Harmonisierung vor dem Merge ---
-            fund_df = fetch_fundamentals(tickers)
-            
-            # Ticker-Typen angleichen, um leere Merges zu verhindern
-            portfolio_data["Ticker"] = portfolio_data["Ticker"].astype(str).str.strip()
-            fund_df["Ticker"] = fund_df["Ticker"].astype(str).str.strip()
 
             merged_portfolio = pd.merge(portfolio_data, fund_df, on="Ticker", how="left")
-            
-            # Standardwerte für fehlende Daten setzen
-            merged_portfolio["Sektor"] = merged_portfolio["Sektor"].fillna("Unbekannt")
-            merged_portfolio["Div. Rendite (%)"] = merged_portfolio["Div. Rendite (%)"].fillna(0.0)
 
             st.divider()
 
@@ -872,7 +859,7 @@ with tab4:
             with col_kpi:
                 st.subheader("Portfolio-Charakteristik")
                 st.info(
-                    "**Treemap-Erklärung:**\nDie Größe der Kacheln spiegelt den monetären Wert der Position wider. Die Farbe zeigt die Performance.")
+                    "**Treemap-Erklärung:**\nDie Größe der Kacheln spiegelt den monetären Wert der Position wider. Die Farbe zeigt die aktuelle Performance (Grün = Gewinn, Rot = Verlust). ETFs und Kryptowährungen haben in der Regel keinen klassischen Unternehmenssektor und werden separat gruppiert.")
 
                 # Berechnung der durchschnittlichen Dividendenrendite (Gewichtet)
                 merged_portfolio['Gewicht'] = merged_portfolio['Aktueller_Wert_EUR'] / total_current
@@ -886,14 +873,14 @@ with tab4:
             display_fund_df = merged_portfolio[
                 ["Name", "Sektor", "Industrie", "KGV (PE)", "Div. Rendite (%)", "Aktueller_Wert_EUR"]].copy()
 
-            # Robuste Formatierung mit Lambda-Funktionen
             styled_fund_df = display_fund_df.style.format({
-                "KGV (PE)": lambda x: f"{x:.2f}" if (pd.notnull(x) and isinstance(x, (int, float))) else "N/A",
-                "Div. Rendite (%)": lambda x: f"{x:.2f} %" if pd.notnull(x) else "0.00 %",
+                "KGV (PE)": "{:.2f}",
+                "Div. Rendite (%)": "{:.2f} %",
                 "Aktueller_Wert_EUR": "{:,.2f} €"
-            }, na_rep="N/A").background_gradient(subset=["Div. Rendite (%)"], cmap="Greens")
+            }).background_gradient(subset=["Div. Rendite (%)"], cmap="Greens")
 
             st.dataframe(styled_fund_df, use_container_width=True, hide_index=True)
+
 
 
 # GLOBARE SIDEBAR-AKTIONEN (Executive PDF Report)
