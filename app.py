@@ -843,39 +843,39 @@ with tab4:
                         }"""
 
             @st.cache_data(ttl=3600)
-                def fetch_fundamentals(ticker_list):
-                    def get_info(t):
-                        try:
-                            ticker_obj = yf.Ticker(t)
-                            # Nutze fast_info für grundlegende Daten, falls info fehlschlägt
-                            info = ticker_obj.info 
-                            fast = ticker_obj.fast_info
-                
-                            # Sektor-Fallback
-                            sektor = info.get("sector") or "Krypto / ETF / Sonstige"
-                            industrie = info.get("industry") or "Krypto / ETF / Sonstige"
-                
-                            # Dividende: Suche in verschiedenen Feldern
-                            div_pct = info.get("dividendYield", 0.0)
-                            if div_pct is None or div_pct == 0:
-                                div_pct = info.get("trailingAnnualDividendYield", 0.0)
-                            
-                            # Konvertierung in Prozent (Yahoo liefert oft 0.015 statt 1.5)
-                            if div_pct and div_pct < 0.5: 
-                                div_pct *= 100
-                
-                            return {
-                                "Ticker": t,
-                                "Sektor": sektor,
-                                "Industrie": industrie,
-                                "KGV (PE)": info.get("trailingPE"),
-                                "Div. Rendite (%)": div_pct
-                            }
-                        except Exception:
-                            return {
-                                "Ticker": t, "Sektor": "Unbekannt", "Industrie": "Unbekannt",
-                                "KGV (PE)": None, "Div. Rendite (%)": 0.0
-                            }
+            def fetch_fundamentals(ticker_list):
+                def get_info(t):
+                    try:
+                        ticker_obj = yf.Ticker(t)
+                        # Nutze fast_info für grundlegende Daten, falls info fehlschlägt
+                        info = ticker_obj.info 
+                        fast = ticker_obj.fast_info
+            
+                        # Sektor-Fallback
+                        sektor = info.get("sector") or "Krypto / ETF / Sonstige"
+                        industrie = info.get("industry") or "Krypto / ETF / Sonstige"
+            
+                        # Dividende: Suche in verschiedenen Feldern
+                        div_pct = info.get("dividendYield", 0.0)
+                        if div_pct is None or div_pct == 0:
+                            div_pct = info.get("trailingAnnualDividendYield", 0.0)
+                        
+                        # Konvertierung in Prozent (Yahoo liefert oft 0.015 statt 1.5)
+                        if div_pct and div_pct < 0.5: 
+                            div_pct *= 100
+            
+                        return {
+                            "Ticker": t,
+                            "Sektor": sektor,
+                            "Industrie": industrie,
+                            "KGV (PE)": info.get("trailingPE"),
+                            "Div. Rendite (%)": div_pct
+                        }
+                    except Exception:
+                        return {
+                            "Ticker": t, "Sektor": "Unbekannt", "Industrie": "Unbekannt",
+                            "KGV (PE)": None, "Div. Rendite (%)": 0.0
+                        }
 
                 fund_data = []
                 with concurrent.futures.ThreadPoolExecutor(max_workers=10) as executor:
