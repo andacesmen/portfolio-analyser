@@ -641,7 +641,7 @@ with tab2:
 
             cluster_df["Wert_EUR"] = cluster_df["Ticker"].map(value_dict).fillna(0)
             
-            # Erstelle nur so viele Spalten, wie wir Cluster haben
+            # --- DYNAMISCHE GRUPPEN-ANZEIGE & EMPFEHLUNGEN ---
             cluster_cols = st.columns(best_k)
 
             for i in range(1, best_k + 1):
@@ -652,17 +652,35 @@ with tab2:
                         cluster_pct = (cluster_val / total_current) * 100 if total_current > 0 else 0
 
                         st.markdown(f"### Gruppe {i}")
-                        st.metric("Gewichtung", f"{cluster_pct:.1f} %", f"{cluster_val:,.0f} €",
-                                  delta_color="off")
+                        st.metric("Gewichtung", f"{cluster_pct:.1f} %", f"{cluster_val:,.0f} €")
+                        
                         asset_names = assets_in_cluster["Name"].tolist()
-                        st.write(f"**Enthält:** {', '.join(asset_names)}")
+                        st.markdown(f"**Assets:**\n_{', '.join(asset_names)}_")
 
+                        # Dynamische Handlungsempfehlungen basierend auf der Gewichtung
                         if cluster_pct >= 50:
-                            st.error("**⚠️ Kritisches Klumpenrisiko**")
+                            st.error(
+                                "**⚠️ Kritisches Klumpenrisiko**\n\n"
+                                "Diese Gruppe dominiert dein Depot. Ein Schock in diesem Sektor "
+                                "könnte über die Hälfte deines Vermögens gefährden.\n\n"
+                                "**Empfehlung:** Positionen reduzieren oder Neuinvestitionen strikt in andere Gruppen lenken."
+                            )
                         elif cluster_pct >= 25:
-                            st.warning("**🟡 Erhöhte Gewichtung**")
+                            st.warning(
+                                "**🟡 Erhöhte Gewichtung**\n\n"
+                                "Diese Gruppe ist eine tragende Säule. Das ist oft gewollt, erhöht aber die "
+                                "Abhängigkeit von diesen spezifischen Korrelationen.\n\n"
+                                "**Empfehlung:** Beobachten. Achte darauf, dass diese Gruppe nicht unkontrolliert weiter wächst."
+                            )
                         else:
-                            st.success("**🟢 Gut diversifiziert**")
+                            st.success(
+                                "**🟢 Gesunde Diversifikation**\n\n"
+                                "Diese Gruppe ist gut proportioniert und dient als stabiler Baustein "
+                                "oder als ergänzende Beimischung zum restlichen Depot.\n\n"
+                                "**Empfehlung:** Keine akute Handlung nötig. Hervorragend geeignet für Rebalancing-Zukäufe."
+                            )
+                    else:
+                        st.info(f"Gruppe {i} konnte nicht berechnet werden.")
 
 
 # TAB 3: RISIKO-SIMULATION
