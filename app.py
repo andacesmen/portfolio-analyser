@@ -889,11 +889,12 @@ with tab4:
             display_fund_df = merged_portfolio[
                 ["Name", "Sektor", "Industrie", "KGV (PE)", "Div. Rendite (%)", "Aktueller_Wert_EUR"]].copy()
 
+            # Wir fügen na_rep="-" hinzu, damit None/NaN-Werte den Formatierer nicht zum Absturz bringen
             styled_fund_df = display_fund_df.style.format({
                 "KGV (PE)": "{:.2f}",
                 "Div. Rendite (%)": "{:.2f} %",
                 "Aktueller_Wert_EUR": "{:,.2f} €"
-            }).background_gradient(subset=["Div. Rendite (%)"], cmap="Greens")
+            }, na_rep="-").background_gradient(subset=["Div. Rendite (%)"], cmap="Greens")
 
             st.dataframe(styled_fund_df, use_container_width=True, hide_index=True)
 
