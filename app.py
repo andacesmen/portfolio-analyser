@@ -814,36 +814,57 @@ with tab4:
                 def get_info(t):
                     try:
                         ticker_obj = yf.Ticker(t)
-                        # Nutze fast_info für grundlegende Daten, falls info fehlschlägt
-                        info = ticker_obj.info 
-                        fast = ticker_obj.fast_info
-            
-                        # Sektor-Fallback
-                        sektor = info.get("sector") or "Krypto / ETF / Sonstige"
+                        info = ticker_obj.info
+                        
+                        # --- SEKTOR & INDUSTRIE ---
+                        sektor = info.get("sector") or info.get("category") or "Krypto / ETF / Sonstige"
                         industrie = info.get("industry") or "Krypto / ETF / Sonstige"
             
-                        # Dividende: Suche in verschiedenen Feldern
-                        div_pct = info.get("dividendYield", 0.0)
-                        if div_pct is None or div_pct == 0:
-                            div_pct = info.get("trailingAnnualDividendYield", 0.0)
-                        
-                        # Konvertierung in Prozent (Yahoo liefert oft 0.015 statt 1.5)
-                        if div_pct and div_pct < 0.5: 
-                            div_pct *= 100
+                        # --- DIVIDENDEN-LOGIK (Präzise Berechnung) ---
+                        div_rate = info.get("dividendRate")
+                        price = info.get("currentPrice") or info.get("regularMarketPrice") or info.get("previousClose")
+            
+                        if div_rate and price and price > 0:
+                            # Direkte Berechnung aus Rate/Preis ist am sichersten
+                            div_pct = (float(div_rate) / float(price)) * 100
+                        else:
+                            # Fallback auf yield-Feld
+                            raw_div = info.get("dividendYield")
+                            if raw_div is None:
+                                div_pct = 0.0
+                            elif raw_div > 0.2: 
+                                # Wenn der Wert > 0.2 ist (z.B. 0.5 für 0.5%), ist er meist schon in Prozent
+                                div_pct = float(raw_div)
+                            else:
+                                # Wenn der Wert winzig ist (z.B. 0.005), ist es eine Dezimalzahl
+                                div_pct = float(raw_div) * 100
+            
+                        # --- KGV (PE) ---
+                        kgv = info.get("trailingPE") or info.get("forwardPE")
             
                         return {
                             "Ticker": t,
                             "Sektor": sektor,
                             "Industrie": industrie,
-                            "KGV (PE)": info.get("trailingPE"),
+                            "KGV (PE)": kgv,
                             "Div. Rendite (%)": div_pct
                         }
                     except Exception:
                         return {
-                            "Ticker": t, "Sektor": "Unbekannt", "Industrie": "Unbekannt",
-                            "KGV (PE)": None, "Div. Rendite (%)": 0.0
+                            "Ticker": t,
+                            "Sektor": "Unbekannt",
+                            "Industrie": "Unbekannt",
+                            "KGV (PE)": None,
+                            "Div. Rendite (%)": 0.0
                         }
-                    
+
+    fund_data = []
+    # ThreadPool für Geschwindigkeit beibehalten
+    with concurrent.futures.ThreadPoolExecutor(max_workers=10) as executor:
+        results = list(executor.map(get_info, ticker_list))
+        fund_data = results
+
+    return pd.DataFrame(fund_data)
 
                 fund_data = []
                 with concurrent.futures.ThreadPoolExecutor(max_workers=10) as executor:
