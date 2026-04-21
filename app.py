@@ -842,7 +842,7 @@ with tab4:
                             "Div. Rendite (%)": 0.0
                         }"""
 
-                @st.cache_data(ttl=3600)
+            @st.cache_data(ttl=3600)
                 def fetch_fundamentals(ticker_list):
                     def get_info(t):
                         try:
