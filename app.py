@@ -155,7 +155,7 @@ if not st.session_state.portfolio.empty:
                 except Exception as e:
                     st.error(f"Fehler beim Lesen der Datei: {e}")
 
-    # Wir übergeben das dynamische Portfolio an die alte Variable
+    
     portfolio_data = st.session_state.portfolio.copy()
 
     edited_df = st.sidebar.data_editor(
@@ -431,7 +431,6 @@ with tab1:
                     # --- DATEN-VALIDIERUNG & VORBEREITUNG ---
 
                     if "Aktueller_Wert_EUR" not in current_portfolio.columns:
-                        # Fallback: Falls Haupt-Engine noch nicht lief, nehmen wir Buy-In als Basis
                         price_col = "Kurs_aktuell_EUR" if "Kurs_aktuell_EUR" in current_portfolio.columns else "Buy_In_EUR"
                         current_portfolio["Aktueller_Wert_EUR"] = current_portfolio["Stücke"] * current_portfolio[
                             price_col]
@@ -443,7 +442,6 @@ with tab1:
                     crisis_data = yf.download(safe_tickers, start=start_d, end=end_d, progress=False)
                     c_close = crisis_data['Close'] if 'Close' in crisis_data else crisis_data
 
-                    # Handle Single-Ticker Portfolios (Series to DataFrame)
                     if isinstance(c_close, pd.Series):
                         c_close = c_close.to_frame(name=safe_tickers[0])
 
@@ -485,7 +483,6 @@ with tab1:
                             loss_pct = (
                             simulated_total_impact_eur / temp_total_current) * 100 if temp_total_current > 0 else 0
 
-                            # Große Metrik
                             st.metric(
                                 label=f"Simulierter Depot-Effekt ({scenario.split(' (')[0]})",
                                 value=f"{simulated_total_impact_eur:+,.2f} €",
@@ -519,14 +516,12 @@ with tab1:
                                 row = impact_df.iloc[i]
                                 with col:
                                     st.caption(row["Name"])
-                                    # Dynamische Farbe für den Euro-Betrag (Grün/Rot)
                                     text_color = "#2ecc71" if row["Impact_EUR"] >= 0 else "#e74c3c"
                                     st.markdown(
                                         f"<h3 style='color:{text_color}; margin:0;'>{row['Impact_EUR']:+,.2f} €</h3>",
                                         unsafe_allow_html=True)
                                     st.caption(f"{row['Performance']:+.2f} % Kursänderung")
 
-                            # Detaillierte Tabelle für alle Positionen
                             with st.expander("Vollständige Analyse aller Positionen anzeigen"):
                                 st.dataframe(
                                     impact_df.rename(columns={
@@ -611,7 +606,7 @@ with tab2:
             # --- DYNAMISCHE CLUSTER-BERECHNUNG ---
             from sklearn.metrics import silhouette_score
 
-            # Wir testen, welche Cluster-Anzahl (2, 3 oder 4) am besten zu den Daten passt
+            # Test der Cluster-Anzahl (2, 3 oder 4)
             best_k = 2
             if len(corr_matrix.columns) > 2:
                 sil_scores = []
@@ -622,7 +617,6 @@ with tab2:
                     score = silhouette_score(dist_values, labels, metric='precomputed')
                     sil_scores.append((k, score))
                 
-                # Wähle das k mit dem höchsten Silhouette Score
                 best_k = max(sil_scores, key=lambda x: x[1])[0]
             else:
                 best_k = len(corr_matrix.columns)
@@ -641,7 +635,7 @@ with tab2:
 
             cluster_df["Wert_EUR"] = cluster_df["Ticker"].map(value_dict).fillna(0)
             
-            # --- DYNAMISCHE GRUPPEN-ANZEIGE & EMPFEHLUNGEN ---
+            # DYNAMISCHE GRUPPEN-ANZEIGE & EMPFEHLUNGEN 
             cluster_cols = st.columns(best_k)
 
             for i in range(1, best_k + 1):
@@ -729,7 +723,6 @@ with tab3:
 
                 portfolio_sims = np.zeros((days, iterations))
 
-                # Konservativer Ansatz: mean_returns auf 0 setzen für reine Risiko-Simulation
                 zero_drift = np.zeros_like(mean_returns.values)
 
                 for i in range(iterations):
@@ -791,7 +784,7 @@ with tab3:
                             "Jede blaue Linie repräsentiert eine mögliche Entwicklung deines Depots über die gewählten Tage. Je breiter der Trichter auseinandergeht, desto höher ist die Unsicherheit. Die schwarze gestrichelte Linie ist dein Startkapital.")
 
                         fig_sim, ax_sim = plt.subplots(figsize=(10, 6))
-                        ax_sim.plot(portfolio_sims, color='#1f77b4', alpha=0.05)  # Modernes Blau
+                        ax_sim.plot(portfolio_sims, color='#1f77b4', alpha=0.05)  
                         ax_sim.axhline(y=total_current, color='black', linestyle='--')
                         ax_sim.set_ylabel("Portfolio Wert (€)")
                         ax_sim.set_xlabel("Tage in der Zukunft")
@@ -803,7 +796,7 @@ with tab3:
                             "Dieses Histogramm zeigt, wo die 1.000 Pfade am Ende gelandet sind. Der höchste Balken ist das wahrscheinlichste Szenario. Die rote gestrichelte Linie markiert deinen Value at Risk (die Grenze zu den schlimmsten 5 %).")
 
                         fig_hist, ax_hist = plt.subplots(figsize=(10, 6))
-                        ax_hist.hist(final_values, bins=50, color='#85C1E9', edgecolor='white')  # Corporate Light Blue
+                        ax_hist.hist(final_values, bins=50, color='#85C1E9', edgecolor='white')  
                         ax_hist.axvline(var_95_value, color='#E74C3C', linestyle='dashed', linewidth=2,
                                         label="VaR Grenze")
                         ax_hist.axvline(total_current, color='#2C3E50', linestyle='solid', linewidth=2,
@@ -935,7 +928,6 @@ with tab4:
             st.dataframe(styled_fund_df, use_container_width=True, hide_index=True)
 
 
-
 # GLOBARE SIDEBAR-AKTIONEN (Executive PDF Report)
 st.sidebar.divider()
 st.sidebar.subheader("📄 PDF Report Export")
@@ -1006,7 +998,7 @@ if st.sidebar.button("Executive Report generieren", use_container_width=True):
                 # --- 2. PDF LAYOUT & DESIGN KLASSE ---
                 class PDF(FPDF):
                     def header(self):
-                        # Corporate Header (Dunkelblau)
+                        # Header
                         self.set_fill_color(20, 35, 60)
                         self.rect(0, 0, 210, 38, 'F')
                         self.set_y(12)
@@ -1016,7 +1008,7 @@ if st.sidebar.button("Executive Report generieren", use_container_width=True):
                         self.set_text_color(255, 255, 255)
                         self.cell(110, 10, 'PORTFOLIO TEARSHEET', 0, 0, 'L')
 
-                        # Timestamp rechts oben
+                        # Timestamp
                         self.set_font('Arial', '', 10)
                         self.set_text_color(200, 200, 200)
                         current_date = datetime.datetime.now().strftime("%d. %b %Y")
@@ -1042,7 +1034,6 @@ if st.sidebar.button("Executive Report generieren", use_container_width=True):
                         self.set_font('Arial', 'B', 14)
                         self.set_text_color(20, 35, 60)
                         self.cell(0, 10, title, 0, 1, 'L')
-                        # Schicke Unterstreichung
                         self.set_draw_color(20, 35, 60)
                         self.set_line_width(0.6)
                         self.line(self.get_x(), self.get_y(), self.get_x() + 190, self.get_y())
@@ -1051,18 +1042,17 @@ if st.sidebar.button("Executive Report generieren", use_container_width=True):
 
                     def set_val_color(self, val):
                         if val > 0:
-                            self.set_text_color(34, 139, 34)  # Forest Green
+                            self.set_text_color(34, 139, 34)  
                         elif val < 0:
-                            self.set_text_color(220, 20, 60)  # Crimson Red
+                            self.set_text_color(220, 20, 60)  
                         else:
-                            self.set_text_color(0, 0, 0)  # Black
-
+                            self.set_text_color(0, 0, 0) 
 
                 # --- 3. PDF GENERIERUNG ---
                 pdf = PDF()
                 pdf.add_page()
 
-                # --- Sektion 1: Key Performance Indicators (Grid Layout) ---
+                # Sektion 1: Key Performance Indicators (Grid Layout)
                 pdf.section_title('1. Core Metrics & Benchmark (1 Jahr Historie)')
 
                 # Zeile 1: Absolute Werte
@@ -1103,7 +1093,7 @@ if st.sidebar.button("Executive Report generieren", use_container_width=True):
                 pdf.section_title('2. Risiko & Stress-Analyse')
                 pdf.set_font('Arial', '', 10)
 
-                # Professionelle Info-Boxen
+                # Info-Boxen
                 pdf.set_fill_color(245, 247, 250)
                 pdf.set_draw_color(220, 225, 230)
 
@@ -1126,11 +1116,10 @@ if st.sidebar.button("Executive Report generieren", use_container_width=True):
                 pdf.set_text_color(0, 0, 0)
                 pdf.ln(10)
 
-                # --- Sektion 3: Logisch geschlossene Asset Tabelle ---
+                # Sektion 3: Logisch geschlossene Asset Tabelle
                 pdf.section_title('3. Asset Allokation & Rendite-Uebersicht')
                 pdf.set_font('Arial', 'B', 9)
 
-                # Neuer Tabellen-Header (Dunkelblau für Kontrast)
                 pdf.set_fill_color(30, 45, 75)
                 pdf.set_text_color(255, 255, 255)
                 pdf.cell(60, 8, ' ASSET NAME', 0, 0, 'L', 1)
@@ -1143,15 +1132,15 @@ if st.sidebar.button("Executive Report generieren", use_container_width=True):
                 pdf.set_font('Arial', '', 10)
                 sorted_port = portfolio_data.sort_values(by="Aktueller_Wert_EUR", ascending=False)
 
-                fill = False  # Für das Zebra-Muster
+                fill = False 
                 for idx, row in sorted_port.iterrows():
-                    pdf.set_fill_color(245, 245, 245)  # Sehr helles Grau für Zebra
+                    pdf.set_fill_color(245, 245, 245)
 
                     name_clean = str(row["Name"])
                     name_clean = (name_clean[:28] + '..') if len(name_clean) > 28 else name_clean
                     weight = (row["Aktueller_Wert_EUR"] / total_current) * 100
 
-                    # Die Spalten-Logik (Investiert -> Marktwert -> Gewinn)
+                    # Spalten-Logik (Investiert -> Marktwert -> Gewinn)
                     pdf.cell(60, 8, f' {name_clean}', 0, 0, 'L', fill)
                     pdf.cell(25, 8, f'{weight:.1f} %', 0, 0, 'C', fill)
                     pdf.cell(35, 8, f'{row["Kaufwert_EUR"]:,.0f} EUR', 0, 0, 'C', fill)
@@ -1163,17 +1152,16 @@ if st.sidebar.button("Executive Report generieren", use_container_width=True):
 
                     pdf.set_text_color(0, 0, 0)
                     pdf.set_font('Arial', '', 10)
-                    fill = not fill  # Farbe für nächste Zeile umschalten
+                    fill = not fill
 
                 pdf.ln(10)
 
-                # --- Sektion 4: Executive Conclusion ---
+                # Sektion 4: Executive Conclusion
                 pdf.section_title('4. Executive Conclusion')
                 pdf.set_font('Arial', '', 10)
-                pdf.set_fill_color(240, 248, 255)  # Helles Blau für das Fazit
+                pdf.set_fill_color(240, 248, 255) 
                 pdf.set_draw_color(176, 196, 222)
 
-                # KI generiertes dynamisches Fazit
                 fazit = f"Das Portfolio weist ein Anlagevolumen von {total_invested:,.0f} EUR auf und wird aktuell mit {total_current:,.0f} EUR bewertet. "
                 if pdf_outperf > 0:
                     fazit += f"Auf 1-Jahres-Sicht konnte der Referenzmarkt (MSCI World) um {pdf_outperf:.2f} Prozentpunkte geschlagen werden (Alpha-Generierung). "
