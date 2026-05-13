@@ -62,9 +62,11 @@ streamlit run app.py
 
 ## 📸 Screenshots
 
-*(Tipp: Lade hier 1-2 Screenshots deines fertigen Dashboards hoch, damit Besucher direkt sehen, wie das Tool aussieht!)*
+<img width="1915" height="1011" alt="Screenshot 2026-05-04 154103" src="https://github.com/user-attachments/assets/fef32624-ff0d-46f5-9ef8-bdbbc939a8aa" />
+<img width="845" height="436" alt="Cluster Diagnose nur Musterportfolio" src="https://github.com/user-attachments/assets/9759afb2-b01a-4023-a1cf-a53f35dbab30" />
+<img width="848" height="496" alt="Monte Carlo" src="https://github.com/user-attachments/assets/a49931a8-eb9e-4b86-ac6a-17fb1f95b105" />
+<img width="1702" height="997" alt="Screenshot 2026-04-24 103705" src="https://github.com/user-attachments/assets/28618cc6-ec8e-481a-adbf-d7a6500074dd" />
 
-![Dashboard Preview](Link_zu_deinem_Screenshot_hier_einfügen_oder_Zeile_löschen)
 
 ---
 
