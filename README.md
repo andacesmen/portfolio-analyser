@@ -31,11 +31,42 @@ Ein intelligentes, webbasiertes Decision Support System zur quantitativen Risiko
 
 ---
 
-## Lokale Installation (Setup)
+## 🛠️ Lokale Installation (Setup)
 
 Falls du das Projekt lokal auf deinem Rechner ausführen möchtest, folge diesen Schritten:
 
-1. **Repository klonen:**
-   ```bash
-   git clone [https://github.com/DEIN_GITHUB_NAME/DEIN_REPO_NAME.git](https://github.com/DEIN_GITHUB_NAME/DEIN_REPO_NAME.git)
-   cd DEIN_REPO_NAME
+**1. Repository klonen:**
+```bash
+git clone https://github.com/DEIN_GITHUB_NAME/DEIN_REPO_NAME.git
+cd DEIN_REPO_NAME
+```
+
+**2. Virtuelle Umgebung erstellen (empfohlen):**
+```bash
+python -m venv venv
+source venv/bin/activate  # Auf Windows: venv\Scripts\activate
+```
+
+**3. Abhängigkeiten installieren:**
+```bash
+pip install -r requirements.txt
+```
+
+**4. Applikation starten:**
+```bash
+streamlit run app.py
+```
+*Die App öffnet sich nun automatisch in deinem Standard-Webbrowser unter `http://localhost:8501`.*
+
+---
+
+## 📸 Screenshots
+
+*(Tipp: Lade hier 1-2 Screenshots deines fertigen Dashboards hoch, damit Besucher direkt sehen, wie das Tool aussieht!)*
+
+![Dashboard Preview](Link_zu_deinem_Screenshot_hier_einfügen_oder_Zeile_löschen)
+
+---
+
+## 🎓 Akademischer Kontext
+Dieses Software-Artefakt wurde im Rahmen einer Bachelorarbeit im Bereich Wirtschaftsinformatik / Data Science entwickelt. Ziel war es, die naive 1/n-Heuristik beim Portfolio-Aufbau durch datengetriebene Präskription zu dekonstruieren und ein nutzerzentriertes Decision Support System gemäß dem Design Science Research (DSR) Framework zu implementieren.
