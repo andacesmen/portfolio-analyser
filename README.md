@@ -1,6 +1,6 @@
 # Advanced Portfolio Analytics (Decision Support System)
 
-## 🎓 Akademischer Kontext
+## Akademischer Kontext
 Dieses Software-Artefakt wurde im Rahmen einer Bachelorarbeit im Bereich Wirtschaftsinformatik entwickelt. Ziel war es, die naive 1/n-Heuristik beim Portfolio-Aufbau durch datengetriebene Präskription zu dekonstruieren und ein nutzerzentriertes Decision Support System gemäß dem Design Science Research (DSR) Framework zu implementieren.
 
 [![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://portfolio-analyser.streamlit.app/)
@@ -34,7 +34,7 @@ Ein intelligentes, webbasiertes Decision Support System zur quantitativen Risiko
 
 ---
 
-## 🛠️ Lokale Installation (Setup)
+## Lokale Installation (Setup)
 
 Falls du das Projekt lokal auf deinem Rechner ausführen möchtest, folge diesen Schritten:
 
