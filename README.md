@@ -7,9 +7,7 @@ Dieses Software-Artefakt wurde im Rahmen einer Bachelorarbeit im Bereich Wirtsch
 [![Python 3.9+](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-Ein intelligentes, webbasiertes Decision Support System zur quantitativen Risikoanalyse und Portfolio-Optimierung. Diese Applikation übersetzt komplexe finanzmathematische Modelle in intuitive, handlungsorientierte Dashboards für Privatanleger.
-
-**👉 [Live-Demo der Applikation ansehen](https://portfolio-analyser.streamlit.app/)**
+**[Live-Demo der Applikation ansehen](https://portfolio-analyser.streamlit.app/)**
 
 ---
 
