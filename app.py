@@ -428,7 +428,7 @@ with tab1:
         else:
             with st.spinner(f"Analysiere historische Daten für {len(current_portfolio)} Positionen..."):
                 try:
-                    # --- DATEN-VALIDIERUNG & VORBEREITUNG ---
+                    # DATEN-VALIDIERUNG & VORBEREITUNG
 
                     if "Aktueller_Wert_EUR" not in current_portfolio.columns:
                         price_col = "Kurs_aktuell_EUR" if "Kurs_aktuell_EUR" in current_portfolio.columns else "Buy_In_EUR"
@@ -438,7 +438,7 @@ with tab1:
                     temp_total_current = current_portfolio["Aktueller_Wert_EUR"].sum()
                     safe_tickers = current_portfolio["Ticker"].tolist()
 
-                    # --- HISTORISCHE DATEN LADEN ---
+                    # HISTORISCHE DATEN LADEN
                     crisis_data = yf.download(safe_tickers, start=start_d, end=end_d, progress=False)
                     c_close = crisis_data['Close'] if 'Close' in crisis_data else crisis_data
 
@@ -479,7 +479,7 @@ with tab1:
                             st.info(
                                 "Hinweis: Deine gewählten Assets existierten im Krisenzeitraum noch nicht an der Börse.")
                         else:
-                            # --- ERGEBNIS-DARSTELLUNG ---
+                            # ERGEBNIS-DARSTELLUNG 
                             loss_pct = (
                             simulated_total_impact_eur / temp_total_current) * 100 if temp_total_current > 0 else 0
 
@@ -603,7 +603,7 @@ with tab2:
             st.markdown(
                 "Das Machine-Learning-Modell hat den Baum oben mathematisch analysiert und die **optimale Anzahl an Risiko-Gruppen** identifiziert.")
 
-            # --- DYNAMISCHE CLUSTER-BERECHNUNG ---
+            # DYNAMISCHE CLUSTER-BERECHNUNG
             from sklearn.metrics import silhouette_score
 
             # Test der Cluster-Anzahl (2, 3 oder 4)
@@ -760,7 +760,7 @@ with tab3:
                             f"**Risikoprofil: Ausgewogen / Wachstumsorientiert (VaR: {var_percent:.1f} %)**\n\nDies ist ein typisches, gesundes Aktien-Portfolio. Du nimmst moderate Schwankungen in Kauf (bis zu 25 % Verlustrisiko im Stress-Szenario), um langfristig eine ordentliche Rendite zu erwirtschaften. **Bewertung:** Gut für den langfristigen Vermögensaufbau geeignet.")
                     else:
                         st.error(
-                            f"**Risikoprofil: Hoch riskant / Aggressiv (VaR: {var_percent:.1f} %)**\n\nSchnall dich an! Dein Portfolio ist hochvolatil oder stark konzentriert (Klumpenrisiko). Du könntest in einem schlechten Jahr über ein Viertel deines Geldes verlieren. **Bewertung:** Das ist nur für sehr langfristige Anlagehorizonte (10+ Jahre), extrem starke Nerven oder als reines 'Spielgeld' geeignet.")
+                            f"**Risikoprofil: Hoch riskant / Aggressiv (VaR: {var_percent:.1f} %)**\n\nAchtung! Dein Portfolio ist hochvolatil oder stark konzentriert (Klumpenrisiko). Du könntest in einem schlechten Jahr über ein Viertel deines Geldes verlieren. **Bewertung:** Das ist nur für sehr langfristige Anlagehorizonte (10+ Jahre), extrem starke Nerven oder als reines 'Spielgeld' geeignet.")
 
                     with st.expander("Wie kommen diese Zahlen zustande? (Blick unter die Haube)"):
                         st.markdown("""
